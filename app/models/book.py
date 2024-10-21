@@ -3,6 +3,14 @@ class Book:
         self.id = id
         self.title = title
         self.description = description
+    
+    def to_book(self):
+        return dict(
+                id=self.id,
+                title=self.title,
+                description=self.description
+            
+        )
 
 books = [
     Book(1, "Fictional Book", "A fantasy novel set in an imaginary world."),
