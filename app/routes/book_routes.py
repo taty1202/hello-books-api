@@ -32,31 +32,55 @@ def get_all_books():
         books_response.append(book.to_dict())
     return books_response
 
-# @books_bp.get("/<book_identifier>")
-# def get_one_book(book_identifier):
-#     book = validate_book_identifier(book_identifier)
-#     return book.to_dict(book_identifier)
+@books_bp.get("/<identifier>")
+def get_one_book(identifier):
+    book = validate_book_identifier(identifier)
+    return book.to_dict()
 
-# def validate_book_identifier(book_identifier):
-#     if book_identifier.isdigit():
-#         return validate_book_id(book_identifier)
-#     else:
-#         return validate_book_name(book_identifier)
+def validate_book_identifier(identifier):
+    if identifier.isdigit():
+        return validate_book_id(identifier)
+    else:
+        return validate_book_name(identifier)
     
-# def validate_book_id(book_id):
-#     try:
-#         book_id = int(book_id)
-#     except:
-#         abort(make_response({"message": f"book id {book_id} invalid"}, 400))
+def validate_book_id(book_id):
+    try:
+        book_id = int(book_id)
+    except:
+        abort(make_response({"message": f"book id {book_id} invalid"}, 400))
 
-#     for book in books:
-#         if book.id == book_id:
-#             return book
-#     abort(make_response({"message": f"book id {book_id} invalid"}, 404))
+    query = db.select(Book).where(Book.id == book_id)
+    book = db.session.scalar(query)
 
+    if not book:
+        abort(make_response({"message": f"book id {book_id} invalid"}, 404))
+    
+    return book
 
-# def validate_book_name(book_name):
-#     for book in books:
-#         if book.name.lower() == book_name.lower():
-#             return book
-#     abort(make_response({"message": f"book id {book_name} invalid"}, 404))
+def validate_book_name(book_name):
+    query = db.select(Book).where(Book.title.ilike(f"%{book_name}%"))
+    book = db.session.scalar(query)
+
+    if not book:
+        abort(make_response({"message": f"book id {book_name} invalid"}, 404))
+    
+    return book
+
+@books_bp.put("/<identifier>")
+def update_book(identifier):
+    book = validate_book_identifier(identifier)
+    request_body = request.get_json()
+
+    book.title = request_body["title"]
+    book.description = request_body["description"]
+    db.session.commit()
+
+    return "", 204
+
+@books_bp.delete("/<identifier>")
+def delete_book(identifier):
+    book = validate_book_identifier(identifier) 
+    db.session.delete(book)
+    db.session.commit()
+
+    return "", 204
