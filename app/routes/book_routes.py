@@ -28,7 +28,7 @@ def get_all_books():
 
     title_param  = request.args.get("title")
     if title_param:
-        query = query.where(Book.title.ilike(f"%{title_param}%"))
+        query = query.where(Book.title == title_param)
 
     description_param = request.args.get("description")
     if description_param:
@@ -49,7 +49,7 @@ def get_one_book(book_id):
 
 @books_bp.put("/<book_id>")
 def update_book(book_id):
-    book = validate_model(book_id)
+    book = validate_model(Book, book_id)
     request_body = request.get_json()
 
     book.title = request_body["title"]
@@ -61,7 +61,8 @@ def update_book(book_id):
 
 @books_bp.delete("/<book_id>")
 def delete_book(book_id):
-    book = validate_model(book_id) 
+    book = validate_model(Book, book_id) 
+    
     db.session.delete(book)
     db.session.commit()
 
